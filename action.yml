@@ -1,0 +1,100 @@
+name: comment-pr
+author: meysamazad81@gmail.com
+branding:
+  color: purple
+  icon: edit-3
+inputs:
+  title:
+    description: "Title of the comment (guaranteed uniqueness of the comment on the PR)"
+    required: true
+  content:
+    description: "Content of the comment"
+    required: true
+  state:
+    description: "State of the comment (present or absent)"
+    required: false
+    default: present
+  token:
+    description: "GitHub token"
+    required: true
+description: Comment on PR with custom text message.
+runs:
+  using: composite
+  steps:
+    - name: Write content to a temp file
+      id: content
+      shell: bash
+      run: |
+        filename=$(mktemp /tmp/comment.XXXXXX)
+        cat << 'EOF' > $filename
+        ${{ inputs.content }}
+        EOF
+        echo "filename=$filename" >> $GITHUB_OUTPUT
+    - if: inputs.state == 'present'
+      name: Comment cost on the PR
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          const fs = require("fs");
+          const fileContent = fs.readFileSync("${{ steps.content.outputs.filename }}", "utf8");
+          const startingText = "${{ inputs.title }}";
+          const updateTime = new Date().toISOString().slice(0, 19);
+          const pull = await github.rest.pulls.get({
+            pull_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          const lastCommitSha = pull.data.head.sha;
+          const lastCommitInfo = `Last commit: ${lastCommitSha}`;
+          const lastUpdated = `Last updated: ${updateTime}\n${lastCommitInfo}`;
+          const contents = `${startingText}\n${lastUpdated}\n${fileContent}`;
+          const { data: comments } = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+
+          const existingComment = comments.find(
+            (comment) =>
+              comment.user.login === "github-actions[bot]" &&
+              comment.body.startsWith(startingText)
+          );
+          if (existingComment !== undefined) {
+            github.rest.issues.deleteComment({
+              comment_id: existingComment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+          }
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: contents,
+          });
+    - if: inputs.state == 'absent'
+      name: Delete the comment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.token }}
+        script: |
+          const startingText = "${{ inputs.title }}";
+          const { data: comments } = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+
+          const existingComment = comments.find(
+            (comment) =>
+              comment.user.login === "github-actions[bot]" &&
+              comment.body.startsWith(startingText)
+          );
+          if (existingComment !== undefined) {
+            github.rest.issues.deleteComment({
+              comment_id: existingComment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+          }
