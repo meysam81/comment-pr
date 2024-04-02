@@ -22,6 +22,7 @@ jobs:
       - name: Comment PR
         uses: meysam81/comment-pr@main
         with:
+          # `title` and `content` support markdown
           title: "# Live preview" # ensures idempotency through a unique identifier
           content: |
             My content goes here
