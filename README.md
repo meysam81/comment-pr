@@ -13,14 +13,13 @@ one just to get notified by email from the GitHub notification system.
 
 ```yaml
 jobs:
-  build:
+  comment-pr:
     permissions:
       pull-requests: write # this is necessary
     runs-on: ubuntu-latest
     steps:
-# ... truncated ...
       - name: Comment PR
-        uses: meysam81/comment-pr@main
+        uses: meysam81/comment-pr@v1
         with:
           # `title` and `content` support markdown
           title: "# Custom title" # ensures idempotency through a unique identifier
