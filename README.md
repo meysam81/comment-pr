@@ -1,5 +1,30 @@
 # Comment PR
 
+<!-- START doctoc -->
+<!-- END doctoc -->
+
+Tired of complex PR comment actions?
+
+Comment PR provides a straightforward solution for adding and updating
+comments on Pull Requests.
+
+## Features
+
+- [x] ✨ **Unique Identifiers**: Automatically prevents duplicate comments
+- [x] 🔄 **Smart Updates**: Removes old comments and adds new ones to trigger notifications
+- [x] 📝 **Markdown Support**: Full markdown capabilities for both title and content
+- [x] 🎯 **Minimal Configuration**: Simple YAML setup with just three required fields
+
+## Why Choose Comment PR?
+
+- [x] **Simplicity First**: Designed for developers who want a no-nonsense solution
+- [x] **Consistent Behavior**: Predictable outcomes across all your workflows
+- [x] **Notification Friendly**: Updates trigger GitHub notifications to keep your team informed
+
+Perfect for CI/CD pipelines, automated reviews, and status updates on your Pull Requests.
+
+## Yet Another GH Action?
+
 There are other GitHub Actions doing the same thing, yet their usage seemed so
 complicated to me and I wanted something simple and consistent.
 
