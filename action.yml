@@ -32,7 +32,7 @@ runs:
         echo "filename=$filename" >> $GITHUB_OUTPUT
     - if: inputs.state == 'present'
       name: Comment cost on the PR
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         github-token: ${{ inputs.token }}
         script: |
@@ -75,7 +75,7 @@ runs:
           });
     - if: inputs.state == 'absent'
       name: Delete the comment
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         github-token: ${{ inputs.token }}
         script: |
