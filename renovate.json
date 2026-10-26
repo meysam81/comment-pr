@@ -3,5 +3,14 @@
   "extends": [
     "github>meysam81/.github"
   ],
-  "osvVulnerabilityAlerts": true
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    {
+      "description": "Updates to what action.yml runs reach every consumer: commit them as fix so the release tool cuts a patch release (the shared preset commits deps as build, which releases nothing)",
+      "matchFileNames": [
+        "action.yml"
+      ],
+      "semanticCommitType": "fix"
+    }
+  ]
 }
