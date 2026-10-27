@@ -8,8 +8,69 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
+  # Runs this action on its own PR with a title and content that broke out of
+  # the old string and heredoc interpolation: the comment must carry them
+  # verbatim, and state: absent must remove it.
+  test-action:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+      REPO: ${{ github.repository }}
+      TITLE: "## ci ${{ github.run_id }} \"double\" 'single' `tick` $HOME"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Comment
+        uses: ./ # zizmor: ignore[self-repository] the documented way to run the action under test
+        with:
+          title: ${{ env.TITLE }}
+          content: |
+            first line
+            EOF
+            echo should-not-run
+          token: ${{ github.token }}
+      - name: The comment carries the title and every content line
+        run: |
+          for _ in $(seq 10); do
+            body=$(gh api "repos/$REPO/issues/$PR/comments" --jq "[.[] | select(.body | startswith(env.TITLE))][0].body // empty")
+            [ -n "$body" ] && break
+            sleep 3
+          done
+          printf '%s\n' "$body"
+          [ -n "$body" ] || { echo "no comment starts with the title"; exit 1; }
+          printf '%s\n' "$body" | grep -qx 'EOF' || { echo "the EOF line is missing"; exit 1; }
+          printf '%s\n' "$body" | grep -qx 'echo should-not-run' || { echo "the last line is missing"; exit 1; }
+      - name: Remove the comment
+        uses: ./ # zizmor: ignore[self-repository] the documented way to run the action under test
+        with:
+          title: ${{ env.TITLE }}
+          content: unused
+          state: absent
+          token: ${{ github.token }}
+      - name: The comment is gone
+        run: |
+          for _ in $(seq 10); do
+            n=$(gh api "repos/$REPO/issues/$PR/comments" --jq "[.[] | select(.body | startswith(env.TITLE))] | length")
+            [ "$n" = 0 ] && exit 0
+            sleep 3
+          done
+          echo "comment still present"; exit 1
+
   release-please:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -18,6 +79,6 @@ jobs:
       pull-requests: write
     steps:
       - name: Release please
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         with:
           release-type: simple
