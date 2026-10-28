@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Comment PR
-        uses: meysam81/comment-pr@v1
+        uses: meysam81/comment-pr@45a518b456b98d39f8ae59a0b20fea50f431e492 # v1.1.0
         with:
           # `title` and `content` support markdown
           title: "# Custom title" # ensures idempotency through a unique identifier
@@ -52,3 +52,7 @@ jobs:
             My content goes here
           token: ${{ secrets.GITHUB_TOKEN }} # this is required
 ```
+
+Pin to a full commit SHA with the version in a trailing comment, as above;
+Renovate and Dependabot both keep that form current. `@v1` also works, but the
+tag moves with every release, so what runs can change under you.
