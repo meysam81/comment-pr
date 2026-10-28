@@ -71,6 +71,32 @@ jobs:
           done
           echo "comment still present"; exit 1
 
+  # A read-only token can list comments but not create one: the 403 from
+  # createComment must fail the step instead of vanishing after it went green.
+  test-api-failure:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - id: comment
+        continue-on-error: true
+        uses: ./ # zizmor: ignore[self-repository] the documented way to run the action under test
+        with:
+          title: "## ci ${{ github.run_id }} read-only token"
+          content: unused
+          token: ${{ github.token }}
+      - name: The step failed
+        env:
+          OUTCOME: ${{ steps.comment.outcome }}
+        run: |
+          test "$OUTCOME" = failure || { echo "expected the comment step to fail, got: $OUTCOME"; exit 1; }
+
   release-please:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
